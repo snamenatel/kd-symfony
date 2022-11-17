@@ -68,6 +68,21 @@ class Product
         return $this;
     }
 
+    public function setWeightFromString(string $weight): self
+    {
+        preg_match('/(\d*)\s?([a-zA-Z]*)/m', $weight, $matches);
+        $val = floatval($matches[1]);
+        $unit = $matches[2];
+
+        $multiplier = match (strtolower($unit)) {
+            'g' => 0.001,
+            default => 1,
+        };
+
+        $this->setWeight($multiplier * $val);
+        return $this;
+    }
+
     public function getCategory(): ?Category
     {
         return $this->category;

@@ -39,6 +39,21 @@ class CategoryRepository extends ServiceEntityRepository
         }
     }
 
+    public function findOrCreateByTitle(string $title, bool $flush = false): Category
+    {
+        if (($category = $this->findOneBy(['title' => $title])) === null) {
+            $category = new Category();
+            $category->setTitle($title);
+            $this->getEntityManager()->persist($category);
+
+            if ($flush) {
+                $this->getEntityManager()->flush();
+            }
+        }
+
+        return $category;
+    }
+
 //    /**
 //     * @return Category[] Returns an array of Category objects
 //     */

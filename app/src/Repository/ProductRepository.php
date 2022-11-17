@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Category;
 use App\Entity\Product;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -37,6 +38,36 @@ class ProductRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function createProductsWithCategoriesFromXml(array $data, int $chunkSize = 50)
+    {
+        $categoryRepository = $this->getEntityManager()->getRepository(Category::class);
+        $idx = 0;
+        foreach ($data as $item) {
+            $product = $this->findOrCreateByTitle($item['name']);
+            $product->setDescription($item['description']);
+            $product->setWeightFromString($item['weight']);
+
+            $category = $categoryRepository->findOrCreateByTitle($item['category']);
+            $product->setCategory($category);
+
+            $this->getEntityManager()->persist($product);
+
+            if ($idx % $chunkSize === 0) {
+                $this->getEntityManager()->flush();
+            }
+        }
+    }
+
+    public function findOrCreateByTitle(string $title): Product
+    {
+        if (($product = $this->findOneBy(['title' => $title])) === null) {
+            $product = new Product();
+            $product->setTitle($title);
+        }
+
+        return $product;
     }
 
 //    /**
