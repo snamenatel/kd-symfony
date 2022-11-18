@@ -23,7 +23,7 @@ class Product
     #[ORM\Column]
     private ?float $weight = null;
 
-    #[ORM\ManyToOne(inversedBy: 'products')]
+    #[ORM\ManyToOne(fetch: 'EAGER', inversedBy: 'products')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Category $category = null;
 
