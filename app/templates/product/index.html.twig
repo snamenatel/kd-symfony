@@ -4,8 +4,37 @@
 
 {% block body %}
     <h2 class="text-center">Product index</h2>
+    {% set selectedCategory = app.request.get('category') %}
+    {% set orderBy = app.request.get('orderBy') %}
+    {% set orderDirection = app.request.get('orderDirection') %}
+    {% set page = app.request.get('page', 1) %}
 
-    <table class="table">
+    <form action="{{ path('app_product_index') }}" method="GET">
+        <input type="hidden" name="page" value="1">
+        <input type="text" name="title" placeholder="Input part of product title">
+        <select name="category" >
+            <option value="">Select category</option>
+            {% for category in categories %}
+                <option value="{{ category.id }}" {% if selectedCategory == category.id %} selected {% endif %}>{{ category.title }}</option>
+            {% endfor %}
+        </select>
+        <select name="orderBy" >
+            <option value="">Select Order By field</option>
+            <option value="id" {%  if orderBy == 'id' %} selected {% endif %}>id</option>
+            <option value="title" {%  if orderBy == 'title' %} selected {% endif %}>title</option>
+            <option value="weight" {%  if orderBy == 'weight' %} selected {% endif %}>weight</option>
+        </select>
+
+        <select name="orderDirection" >
+            <option value="">Select Order By direction</option>
+            <option value="asc" {% if orderDirection == 'asc' %} selected {% endif %}>asc</option>
+            <option value="desc" {% if orderDirection == 'desc' %} selected {% endif %}>desc</option>
+        </select>
+        <button class="btn btn-success" type="submit">Search</button>
+        <a class="btn btn-danger" href="{{ path('app_product_index')  }}">Reset</a>
+    </form>
+
+    <table class="table table-bordered table-striped">
         <thead>
             <tr>
                 <th>Id</th>
@@ -20,7 +49,6 @@
             <tr>
                 <td>{{ product.id }}</td>
                 <td><a href="{{ path('app_product_show', {'id': product.id}) }}">{{ product.title }}</a></td>
-                <td>{{ product.title }}</td>
                 <td>{{ product.category.title }}</td>
                 <td>{{ product.description }}</td>
                 <td>{{ product.weight }}</td>
@@ -30,8 +58,35 @@
                 <td colspan="5">no records found</td>
             </tr>
         {% endfor %}
+        <tr>
+            <td colspan="5">
+                <div class="d-flex justify-content-between">
+                    <div class="d-flex">
+                        {% if page > 1 %}
+                        <a href="{{ path('app_product_index', {
+                            'page': page - 1,
+                            'category': selectedCategory,
+                            'orderBy': orderBy,
+                            'orderDirection': orderDirection
+                        }) }}"
+                           class="btn btn-info btn-sm mr-4"
+                        >Prev page</a>
+                        {% endif %}
+                        {%  if page < pages %}
+                        <a href="{{ path('app_product_index', {
+                            'page': page + 1,
+                            'category': selectedCategory,
+                            'orderBy': orderBy,
+                            'orderDirection': orderDirection
+                        }) }}"
+                           class="btn btn-info btn-sm"
+                        >Next page</a>
+                        {% endif %}
+                    </div>
+                    <div>All products {{ all }}</div>
+                </div>
+            </td>
+        </tr>
         </tbody>
     </table>
-
-    <a href="{{ path('app_product_new') }}">Create new</a>
 {% endblock %}

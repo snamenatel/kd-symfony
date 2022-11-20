@@ -2,9 +2,12 @@
 
 namespace App\Controller;
 
+use App\DTO\ProductsIndexRequestDTO;
 use App\Entity\Product;
 use App\Form\ProductType;
+use App\Repository\CategoryRepository;
 use App\Repository\ProductRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,12 +17,16 @@ use Symfony\Component\Routing\Annotation\Route;
 class ProductController extends AbstractController
 {
     #[Route('/', name: 'app_product_index', methods: ['GET'])]
-    public function index(ProductRepository $productRepository): Response
-    {
-//        dd($productRepository->findAll()[0]);
-        return $this->render('product/index.html.twig', [
-            'products' => $productRepository->findAll(),
+    public function index(
+        Request $request,
+        ProductRepository $productRepository,
+        CategoryRepository $categoryRepository
+    ): Response {
+        $dto = new ProductsIndexRequestDTO($request);
+        $result = array_merge($productRepository->searchWithPagination($dto), [
+            'categories' => $categoryRepository->findAllArray()
         ]);
+        return $this->render('product/index.html.twig', $result);
     }
 
     #[Route('/new', name: 'app_product_new', methods: ['GET', 'POST'])]

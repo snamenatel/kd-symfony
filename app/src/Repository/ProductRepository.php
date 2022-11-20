@@ -2,8 +2,10 @@
 
 namespace App\Repository;
 
+use App\DTO\ProductsIndexRequestDTO;
 use App\Entity\Category;
 use App\Entity\Product;
+use App\Services\OffsetPaginator;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -38,6 +40,32 @@ class ProductRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function searchWithPagination(ProductsIndexRequestDTO $DTO): array
+    {
+        $query = $this->createQueryBuilder('a');
+        if ($DTO->getCategoryId()) {
+            $query = $query->where('a.category = :category')
+                ->setParameter('category', $DTO->getCategoryId());
+        }
+
+        if ($DTO->getTitle()) {
+            $query = $query->{$DTO->getCategoryId() ? 'andWhere' : 'where'}('a.title LIKE :title')
+                ->setParameter('title', '%' . $DTO->getTitle() . '%');
+        }
+
+        $query->orderBy('a.' . $DTO->getOrderBy(), $DTO->getOrderDirection());
+//        dd($query->getQuery());
+
+        $paginator = new OffsetPaginator($query->getQuery());
+
+        return [
+            'products' => $paginator->getPage($DTO->getPage())->getResult(),
+            'all' => $paginator->getCount(),
+            'pages' => $paginator->getCountPages(),
+            'page' => $DTO->getPage()
+        ];
     }
 
     public function createProductsWithCategoriesFromXml(array $data, int $chunkSize = 50)
